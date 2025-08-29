@@ -27,4 +27,4 @@ jobs:
       env:
         deploy_url: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
       run: |
-         python backend.main.py
+         python backend/main.py
