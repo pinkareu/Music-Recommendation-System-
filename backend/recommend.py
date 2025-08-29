@@ -11,7 +11,8 @@ import matplotlib.pyplot as plt
 import json
 import random
 import numpy as np
-import shutil
+import requests
+
 
 torch.manual_seed(1)  # reproducible results
 
@@ -77,31 +78,53 @@ def plot_prob_distribution(input_probs, top5_probs, save_path):
     plt.savefig(save_path, bbox_inches="tight")
     plt.close()
 
-# Helper: create playlist from top 5 songs
+
+# Helper: create playlist from top 5 songs stored in S3
 def create_top5_playlist(top5_songs, genre_prob_dict, input_song_probs):
     pred_genre_idx = torch.argmax(input_song_probs)
     pred_genre = classes[pred_genre_idx]
     playlist_title = random.choice(playlist_names_dict[pred_genre])
 
-    os.makedirs("../frontend/build/static/audio", exist_ok=True)
+    # Base S3 URL
+    s3_base_url = "https://music-files-rec.s3.amazonaws.com"
+
+    # Ensure frontend audio folder exists
+    local_audio_dir = "../frontend/build/static/audio"
+    os.makedirs(local_audio_dir, exist_ok=True)
+
     playlist_songs = []
 
     for i, (song, _) in enumerate(top5_songs, 1):
-        song = song.removesuffix(".png")
-        genre_folder = song.split('.')[0]
-        src_path = f"static/genres_original/{genre_folder}/{song}.wav"
-        dst_path = f"../frontend/build/static/audio/{song}.wav"
-        if not os.path.exists(dst_path):
-            shutil.copy(src_path, dst_path)
+        song_name = song.removesuffix(".png")
+        genre_folder = song_name.split('.')[0]
+        # Construct S3 URL
+        song_url = f"{s3_base_url}/genres_original/{genre_folder}/{song_name}.wav"
+        # Local path
+        local_path = os.path.join(local_audio_dir, f"{song_name}.wav")
+
+        # Download if not already exists
+        if not os.path.exists(local_path):
+            try:
+                response = requests.get(song_url, stream=True)
+                response.raise_for_status()
+                with open(local_path, "wb") as f:
+                    for chunk in response.iter_content(chunk_size=8192):
+                        f.write(chunk)
+            except Exception as e:
+                print(f"Error downloading {song_name}: {e}")
+                continue
+
         playlist_songs.append({
             "title": f"Mystery Melody {i}",
-            "path": f"/audio/{song}.wav"
+            "path": f"/audio/{song_name}.wav"
         })
 
     return {
         "playlist_title": playlist_title,
         "songs": playlist_songs
     }
+
+
 
 # Main recommendation function
 def recommendation(input_audio_path="../frontend/build/static/audio/input_song.mp3"):
