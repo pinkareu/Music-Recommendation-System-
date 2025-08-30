@@ -13,7 +13,8 @@ import random
 import numpy as np
 import requests
 
-
+# Load pre-trained VGG16
+vgg16 = models.vgg16(pretrained=True)
 torch.manual_seed(1)  # reproducible results
 
 # Classes / genres
@@ -131,10 +132,6 @@ def recommendation(input_audio_path="../frontend/build/static/audio/input_song.m
     print(input_audio_path)
     if not os.path.exists(input_audio_path):
         return {"error": "No input song found"}
-
-    # Load pre-trained VGG16
-    vgg16 = models.vgg16(pretrained=True)
-    print("here")
 
     # Load audio
     y, sr = librosa.load(input_audio_path, sr=None)
