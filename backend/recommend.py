@@ -1,4 +1,5 @@
 import os
+import io
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -13,8 +14,19 @@ import random
 import numpy as np
 import requests
 
-# Load pre-trained VGG16
-vgg16 = models.vgg16(pretrained=True)
+WEIGHTS_URL = "https://music-files-rec.s3.amazonaws.com/vgg16_weights.pth"
+
+# Download weights into memory
+print("Downloading VGG16 weights from S3...")
+response = requests.get(WEIGHTS_URL)
+weights_bytes = io.BytesIO(response.content)
+
+# Load model
+vgg16 = models.vgg16(pretrained=False)
+vgg16.load_state_dict(torch.load(weights_bytes, map_location="cpu", weights_only=False))
+vgg16.eval()  # important for inference
+print("Model loaded!")
+
 torch.manual_seed(1)  # reproducible results
 
 # Classes / genres
