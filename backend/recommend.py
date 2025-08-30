@@ -134,6 +134,7 @@ def recommendation(input_audio_path="../frontend/build/static/audio/input_song.m
 
     # Load pre-trained VGG16
     vgg16 = models.vgg16(pretrained=True)
+    print("here")
 
     # Load audio
     y, sr = librosa.load(input_audio_path, sr=None)
