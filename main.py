@@ -4,10 +4,11 @@ from fastapi.responses import JSONResponse
 import shutil
 import os
 import uvicorn
-from recommend import recommendation  # ML code
+from backend.recommend import recommendation  # ML code
 from fastapi.middleware.cors import CORSMiddleware
 import imageio_ffmpeg as ffmpeg
 import subprocess
+import os
 
 app = FastAPI()
 
@@ -23,7 +24,7 @@ app.add_middleware(
 @app.post("/recommend")
 async def recommendations(file: UploadFile = File(...)):
     # Create directory if it doesn't exist
-    save_dir = "../frontend/build/static/audio"
+    save_dir = f"frontend/build/static/audio"
     os.makedirs(save_dir, exist_ok=True)
 
     # Delete all existing files in the directory
@@ -57,7 +58,7 @@ async def recommendations(file: UploadFile = File(...)):
     return JSONResponse(result)
 
 # Serve React build at root
-app.mount("/", StaticFiles(directory="../frontend/build/static", html=True), name="frontend")
+app.mount("/", StaticFiles(directory=f"frontend/build/static", html=True), name="frontend")
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))  # default 8000 for local dev

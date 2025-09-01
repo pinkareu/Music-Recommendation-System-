@@ -102,7 +102,7 @@ def create_top5_playlist(top5_songs, genre_prob_dict, input_song_probs):
     s3_base_url = "https://music-files-rec.s3.amazonaws.com"
 
     # Ensure frontend audio folder exists
-    local_audio_dir = "../frontend/build/static/audio"
+    local_audio_dir = "frontend/build/static/audio"
     os.makedirs(local_audio_dir, exist_ok=True)
 
     playlist_songs = []
@@ -140,9 +140,9 @@ def create_top5_playlist(top5_songs, genre_prob_dict, input_song_probs):
 
 
 # Main recommendation function
-def recommendation(input_audio_path="../frontend/build/static/audio/input_song.mp3"):
-    print(input_audio_path)
+def recommendation(input_audio_path="frontend/build/static/audio/input_song.mp3"):
     if not os.path.exists(input_audio_path):
+        print("no path")
         return {"error": "No input song found"}
 
     # Load audio
@@ -154,8 +154,8 @@ def recommendation(input_audio_path="../frontend/build/static/audio/input_song.m
     mel_spec_db = librosa.power_to_db(mel_spec, ref=np.max)
 
     # Save spectrogram image
-    os.makedirs("../frontend/build/static/images", exist_ok=True)
-    spectrogram_file = "../frontend/build/static/images/input_spectrogram.png"
+    os.makedirs("frontend/build/static/images", exist_ok=True)
+    spectrogram_file = "frontend/build/static/images/input_spectrogram.png"
     plt.figure(figsize=(15,6))
     librosa.display.specshow(mel_spec_db, x_axis='time', y_axis='mel', sr=sr, cmap='viridis')
     plt.axis('off')
@@ -178,7 +178,7 @@ def recommendation(input_audio_path="../frontend/build/static/audio/input_song.m
 
     # Load custom RESNET model
     model = RESNET()
-    model_path = "model/model_ResnetOrig_bs32_lr0.001_epoch26"
+    model_path = "backend/model/model_ResnetOrig_bs32_lr0.001_epoch26"
     state_dict = torch.load(model_path, map_location=torch.device('cpu'))
     model.load_state_dict(state_dict)
     model.eval()
@@ -191,7 +191,7 @@ def recommendation(input_audio_path="../frontend/build/static/audio/input_song.m
     cos_sim = torch.nn.CosineSimilarity(dim=1)
     similarity_dict = {}
 
-    with open("static/genre_prob_dist_dict.json", "r") as f:
+    with open("backend/static/genre_prob_dist_dict.json", "r") as f:
         genre_prob_dict = json.load(f)
     for song, probs in genre_prob_dict.items():
         genre_prob_dict[song] = torch.tensor(probs)
@@ -206,7 +206,7 @@ def recommendation(input_audio_path="../frontend/build/static/audio/input_song.m
     playlist_data = create_top5_playlist(top5_songs, genre_prob_dict, input_probs)
 
     # Plot probability distribution graph
-    prob_graph_path = "../frontend/build/static/images/prob_distribution.png"
+    prob_graph_path = "frontend/build/static/images/prob_distribution.png"
     top5_probs = [genre_prob_dict[song[0]].squeeze(0) for song in top5_songs]
     plot_prob_distribution(input_probs, top5_probs, prob_graph_path)
 
